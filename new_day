@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+year=2020
+
+day=$1
+if [[ -z $day ]]; then
+    echo >&2 "Usage: $0 <day>"
+    exit 1
+fi
+
+inputFile="inputs/day${day}"
+if [[ ! -e $inputFile ]]; then
+    echo "Downloading input file"
+    sessionToken=$(cat ~/.config/aoc/session_token)
+    wget --no-cookies --header "Cookie: session=${sessionToken}" -O "$inputFile" https://adventofcode.com/${year}/day/${day}/input
+fi
+
+testFile="testdata/day${day}"
+if [[ ! -e $testFile ]]; then
+    echo "Downloading input file"
+    xmlstarlet fo -H <(curl https://adventofcode.com/${year}/day/$day) 2>/dev/null \
+        | xmlstarlet sel -t -v '//pre[1]/code[1]' \
+        | sed 's/&lt;/</g' \
+        | sed 's/&gt;/>/g' \
+        > "$testFile"
+fi
+
+binFile="src/day${day}.cbl"
+date=$(date +%d-%^b-%+4Y)
+if [[ ! -e $binFile ]]; then
+    cat >"$binFile" <<EOF
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. day${day}.
+       AUTHOR. Wanja Chresta.
+       DATE-WRITTEN. ${date}.
+
+       DATA DIVISION.
+
+       PROCEDURE DIVISION.
+EOF
+fi
